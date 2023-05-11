@@ -1,3 +1,38 @@
+USE classicmodels;
+
+SHOW TABLES;
+
+SELECT * FROM customers;
+
+SELECT employeeNumber, firstName, lastName, jobTitle FROM employees ORDER BY firstName;
+
+SELECT employeeNumber, firstName, lastName FROM employees
+WHERE firstName LIKE 'Jeff%'
+ORDER BY firstName;
+
+SELECT officeCode, count(employeeNumber) headcount
+FROM employees
+GROUP BY officeCode
+HAVING headcount >= 5;
+
+SELECT  d.customerName
+FROM customers AS d;
+
+SELECT employeeNumber, firstName, lastName, jobTitle, e.officeCode, addressLine1 FROM employees e
+INNER JOIN offices d ON d.officeCode = e.officeCode
+ORDER BY firstName DESC;
+
+SELECT AVG(amount)
+FROM payments;
+
+SELECT
+customerNumber, COUNT(*)
+FROM payments
+GROUP BY customerNumber;
+
+SELECT * FROM payments
+WHERE customerNumber IN (SELECT customerNumber FROM payments WHERE amount > 4500) ;
+
 --- Assignment Week#2 - sql
 
 START TRANSACTION;
@@ -52,15 +87,22 @@ CREATE TABLE pembayaran (
 CREATE TABLE detail_perjalanan (
   id_detail INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   id_pesanan VARCHAR(50) NOT NULL,
+  id_draiver VARCHAR(50) NOT NULL,
   waktu_jemput TIME NOT NULL,
-  kendaraan VARCHAR(50) NOT NULL,
-  jarak DECIMAL(10,2) NOT NULL,
-  waktu_perjalanan TIME NOT NULL,
+  jarak VARCHAR(50) NOT NULL,
+  waktu_perjalanan VARCHAR(50) NOT NULL,
   alamat_jemput VARCHAR(225) NOT NULL,
   alamat_tujuan VARCHAR(225) NOT NULL,
-  FOREIGN KEY (id_pesanan) REFERENCES pesanan(id_pesanan)
+  FOREIGN KEY (id_pesanan) REFERENCES pesanan(id_pesanan),
+  FOREIGN KEY (id_draiver) REFERENCES draiver(id_draiver)
 );
-ALTER TABLE detail_perjalanan MODIFY COLUMN waktu_perjalanan VARCHAR(100);
+
+CREATE TABLE draiver (
+  id_draiver VARCHAR(50) NOT NULL PRIMARY KEY,
+  nama_draiver VARCHAR(50) NOT NULL,
+  kendaraan VARCHAR(100) NOT NULL
+);
+
 
 INSERT INTO pesanan (id_pesanan, tanggal, nama_pelanggan, total_bayar)
 VALUES ('RB-191274-3068613', '2022-12-21', 'Balqis Rizki Permata', 30000);
@@ -68,10 +110,13 @@ VALUES ('RB-191274-3068613', '2022-12-21', 'Balqis Rizki Permata', 30000);
 INSERT INTO pembayaran (id_pesanan, biaya_perjalanan, biaya_jasa_aplikasi, total_pembayaran, jenis_pembayaran)
 VALUES ('RB-191274-3068613', 26000, 4000, 30000, 'tunai');
 
-INSERT INTO detail_perjalanan (id_pesanan, waktu_jemput, kendaraan, jarak, waktu_perjalanan, alamat_jemput, alamat_tujuan)
-VALUES ('RB-191274-3068613', '17:09', 'Heryawan Z1830TD Daihatsu Sigra', '3.0 km', '16 menit', 'STIKES MUHAMMADIYAH CIAMIS', 'JL. K. H. Ahmad Dahlan No. 20, Ciamis, Kec. Ciamis Kabupaten Ciamis, Jawa Barat 46216, Indonesia - Toko Ujang Haji Jana Jl. Otista No. 46, Pawindan, Kec. Ciamis, Kabupaten Clamis, Jawa Barat 46218, Indonesia');
+INSERT INTO draiver (id_draiver, nama_draiver, kendaraan)
+VALUES ('Z1830TD', 'Heryawan ', 'Daihatsu Sigra');
 
-SELECT * FROM detail_perjalanan ;
+INSERT INTO detail_perjalanan (id_pesanan, id_draiver, waktu_jemput, jarak, waktu_perjalanan, alamat_jemput, alamat_tujuan)
+VALUES ('RB-191274-3068613','Z1830TD', '17:09', '3.0 km', '16 menit', 'STIKES MUHAMMADIYAH CIAMIS', 'JL. K. H. Ahmad Dahlan No. 20, Ciamis, Kec. Ciamis Kabupaten Ciamis, Jawa Barat 46216, Indonesia - Toko Ujang Haji Jana Jl. Otista No. 46, Pawindan, Kec. Ciamis, Kabupaten Clamis, Jawa Barat 46218, Indonesia');
+
+SELECT * FROM draiver d  ;
 
 SELECT
 	p.id_pesanan,
@@ -81,8 +126,10 @@ SELECT
 	pb.biaya_jasa_aplikasi,
 	pb.total_pembayaran,
 	pb.jenis_pembayaran,
+	d.id_draiver,
+	d.nama_draiver,
+	d.kendaraan,
 	dp.waktu_jemput,
-	dp.kendaraan,
 	dp.jarak,
 	dp.waktu_perjalanan,
 	dp.alamat_jemput AS alamat_jemput_detail,
@@ -94,7 +141,11 @@ JOIN
 	p.id_pesanan = pb.id_pesanan
 JOIN
     detail_perjalanan dp on
-	p.id_pesanan = dp.id_pesanan;
+	p.id_pesanan = dp.id_pesanan
+JOIN
+    draiver d on
+	dp.id_draiver = d.id_draiver;
+
 
 
 --- SELECT statement dengan subquery
